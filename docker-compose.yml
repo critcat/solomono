@@ -1,0 +1,36 @@
+version: '3.7'
+
+volumes:
+  database:
+
+services:
+  solomono-db:
+    container_name: solomono-db
+    image: mariadb:10.6.3
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - database:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shop
+
+  solomono-nginx:
+    container_name: solomono-nginx
+    build:
+      context: ./docker/nginx
+    volumes:
+      - ./app:/symfony
+      - ./docker/nginx/log:/symfony/var/log/nginx
+    ports:
+      - "8081:80"
+
+  solomono-php-fpm:
+    container_name: solomono-php-fpm
+    build:
+      context: ./docker/php-fpm
+    volumes:
+      - ./app:/symfony
+    depends_on:
+      - solomono-db
+
+
