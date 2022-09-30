@@ -1,5 +1,10 @@
 version: '3.7'
 
+networks:
+  solomono:
+    name: solomono
+    driver: bridge
+
 volumes:
   database:
 
@@ -10,19 +15,29 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     volumes:
       - database:/var/lib/mysql
+    ports:
+      - "33060:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: shop
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    networks:
+      - solomono
 
   solomono-nginx:
     container_name: solomono-nginx
     build:
       context: ./docker/nginx
+    depends_on:
+      - solomono-php-fpm
     volumes:
       - ./app:/symfony
       - ./docker/nginx/log:/symfony/var/log/nginx
     ports:
       - "8081:80"
+    networks:
+      - solomono
 
   solomono-php-fpm:
     container_name: solomono-php-fpm
@@ -32,5 +47,6 @@ services:
       - ./app:/symfony
     depends_on:
       - solomono-db
-
+    networks:
+      - solomono
 
