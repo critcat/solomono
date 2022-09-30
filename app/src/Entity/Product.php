@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Repository\ProductRepository;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -89,5 +90,10 @@ class Product
 		$this->createdAt = $createdAt;
 
 		return $this;
+	}
+
+	public function getPriceFormatted(): string
+	{
+		return number_format($this->price / 100, 2, '.', ' ');
 	}
 }
