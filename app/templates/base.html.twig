@@ -28,9 +28,9 @@
             <label for="sort">Сортування:</label>
             <select id="sort" name="sort" onchange="changeSort(this)" class="form-select form-select-sm"
                     style="display: inline-block; width: auto">
-                <option value="price"{% if currentCategoryId == 'price' %} selected{% endif %}>спочатку дешевші</option>
-                <option value="name"{% if currentCategoryId == 'name' %} selected{% endif %}>за алфавітом</option>
-                <option value="date"{% if currentCategoryId == 'date' %} selected{% endif %}>спочатку нові</option>
+                <option value="price"{% if currentSort == 'price' %} selected{% endif %}>спочатку дешевші</option>
+                <option value="name"{% if currentSort == 'name' %} selected{% endif %}>за алфавітом</option>
+                <option value="date"{% if currentSort == 'date' %} selected{% endif %}>спочатку нові</option>
             </select>
             <div id="productsWrapper">
                 {% for product in products %}
