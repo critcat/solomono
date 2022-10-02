@@ -6,6 +6,10 @@
     <title>{% block title %}Welcome!{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+    <script>
+        let currentCategoryId = {{ currentCategoryId }};
+        let currentSort = '{{ currentSort }}';
+    </script>
 </head>
 <body>
 <div class="container-fluid">
@@ -19,8 +23,15 @@
                 {% endfor %}
             </ul>
         </div>
-        <div class="col-sm-auto">
+        <div class="col-sm-9">
             <h3 id="productsListCaption">{{ currentCategory.name|default('Всі продукти') }}</h3>
+            <label for="sort">Сортування:</label>
+            <select id="sort" name="sort" onchange="changeSort(this)" class="form-select form-select-sm"
+                    style="display: inline-block; width: auto">
+                <option value="price"{% if currentCategoryId == 'price' %} selected{% endif %}>спочатку дешевші</option>
+                <option value="name"{% if currentCategoryId == 'name' %} selected{% endif %}>за алфавітом</option>
+                <option value="date"{% if currentCategoryId == 'date' %} selected{% endif %}>спочатку нові</option>
+            </select>
             <div id="productsWrapper">
                 {% for product in products %}
                     <div class="p-2">
@@ -54,91 +65,10 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+        integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.min.js"
         integrity="sha384-7VPbUDkoPSGFnVtYi0QogXtr74QeVeeIs99Qfg5YCF+TidwNdjvaKZX19NZ/e6oz" crossorigin="anonymous"></script>
-<script>
-    function changeCategory(categoryId) {
-        const url = '/category/' + categoryId;
-
-        let request = new XMLHttpRequest();
-        request.onreadystatechange = function() {
-            if (this.readyState === 4) {
-                if (this.status === 200) {
-                    try {
-                        let response = JSON.parse(this.responseText);
-
-                        updateProductsList(response);
-                    } catch (err) {
-                        console.error(err.message + " in " + this.responseText);
-                    }
-                } else {
-                    console.error("AJAX error");
-                }
-            }
-        };
-        request.open("GET", url, true);
-        request.send();
-    }
-
-    function updateProductsList(response) {
-        document.getElementById('productsListCaption').textContent = response.category.name;
-
-        const productsWrapper = document.getElementById('productsWrapper');
-        clearElementChildren(productsWrapper);
-        addProducts(productsWrapper, response.category.products);
-
-        const newUrl = window.location.protocol + '//' + window.location.host + '/?c=' + response.category.id;
-        window.history.pushState({}, response.category.name, newUrl);
-    }
-
-    function clearElementChildren(element) {
-        while (element.firstChild) {
-            element.removeChild(element.lastChild);
-        }
-    }
-
-    function addProducts(wrapper, products) {
-        let newProduct = '';
-        products.forEach((product) => {
-            newProduct += `<div class="p-2">
-                <p class="lead">${product.name}</p>
-                ${product.priceFormatted } грн.<br>
-                ${product.createdAt}<br>
-                <button class="btn btn-primary btn-sm" onclick="showProductDetails(${product.id})">Купити</button>
-            </div>`;
-
-            wrapper.innerHTML = newProduct;
-        });
-    }
-
-    function showProductDetails(productId) {
-        const url = '/product/' + productId;
-
-        let request = new XMLHttpRequest();
-        request.onreadystatechange = function() {
-            if (this.readyState === 4) {
-                if (this.status === 200) {
-                    try {
-                        let response = JSON.parse(this.responseText);
-
-                        const productModalElement = document.getElementById('productModal');
-                        productModalElement.querySelector('#productModalLabel').textContent = response.name;
-                        productModalElement.querySelector('#productModalPrice').textContent = response.priceFormatted;
-                        productModalElement.querySelector('#productModalCreatedDate').textContent = response.createdAt;
-
-                        const myModal = new bootstrap.Modal(productModalElement);
-                        myModal.show();
-                    } catch (err) {
-                        console.error(err.message + " in " + this.responseText);
-                    }
-                } else {
-                    console.error("AJAX error");
-                }
-            }
-        };
-        request.open("GET", url, true);
-        request.send();
-    }
-</script>
+<script src="/js/catalog.js"></script>
 </body>
 </html>

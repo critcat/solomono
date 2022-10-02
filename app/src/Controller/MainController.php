@@ -2,10 +2,9 @@
 
 namespace App\Controller;
 
-use App\Entity\Product;
-use App\Repository\CategoryRepository;
-use App\Repository\ProductRepository;
-use App\Response\ProductResponse;
+use App\Handlers\GetCurrentCategoryAndProductsHandler;
+use App\Handlers\GetProductByIdHandler;
+use App\Handlers\GetCategoriesAndProductsHandler;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,67 +13,38 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class MainController extends AbstractController
 {
-	protected CategoryRepository $categoryRepository;
-	protected ProductRepository $productRepository;
-
-	public function __construct(CategoryRepository $categoryRepository, ProductRepository $productRepository)
-	{
-		$this->categoryRepository = $categoryRepository;
-		$this->productRepository = $productRepository;
-	}
-
 	/**
      * @Route("", name="app-main")
      */
-    public function index(Request $request): Response
+    public function index(Request $request, GetCategoriesAndProductsHandler $handler): Response
 	{
 		$categoryId = $request->query->get('c') ?: 0;
-		$categories = $this->categoryRepository->findAll();
-		$currentCategory = null;
+		$sort = $request->query->get('sort') ?? '';
 
-		if ($categoryId) {
-			$currentCategory = $this->categoryRepository->find($categoryId);
-			$products = $this->productRepository->findBy(['category' => $currentCategory]);
-		} else {
-			$products = $this->productRepository->findAll();
-		}
+		$response = $handler->run($categoryId, $sort);
 
-		return $this->render('base.html.twig', [
-			'categories' => $categories,
-			'currentCategory' => $currentCategory,
-			'products' => $products,
-		]);
+		return $this->render('base.html.twig', array_merge(
+			[
+				'currentCategoryId' => $categoryId,
+				'currentSort' => $sort,
+			],
+			$response
+		));
     }
 
 	/**
-	 * @Route("/category/{id}", name="category-by-id", requirements={"id"="\d+"}, methods={"GET"})
+	 * @Route("/category/{id}/{sort}", name="category-by-id", methods={"GET"})
 	 */
-	public function showCategory(int $id): JsonResponse
+	public function showCategory(int $id, GetCurrentCategoryAndProductsHandler $handler, string $sort = ''): JsonResponse
 	{
-		$category = $this->categoryRepository->find($id);
-		$products = $this->productRepository->findBy(['category' => $category]);
-
-		return $this->json([
-			'category' => [
-				'id' => $category->getId(),
-				'name' => $category->getName(),
-				'products' => array_map(
-					fn (Product $product) => new ProductResponse($product),
-					$products
-				),
-			],
-		]);
+		return $this->json($handler->run($id, $sort));
 	}
-
 
 	/**
 	 * @Route("/product/{id}", name="product-details", requirements={"id"="\d+"}, methods={"GET"})
 	 */
-	public function showOneProduct(int $id): JsonResponse
+	public function showOneProduct(int $id, GetProductByIdHandler $handler): JsonResponse
 	{
-		$product = $this->productRepository->find($id);
-		$response = new ProductResponse($product);
-
-		return $this->json($response);
+		return $this->json($handler->run($id));
 	}
 }
