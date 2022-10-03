@@ -36,4 +36,5 @@ docker exec solomono-php-fpm php bin/console doctrine:fixtures:load -n
 
 Використання
 ---
-[http://localhost:8081](http://localhost:8081)
+1. Каталог товарів: [http://localhost:8081](http://localhost:8081)
+2. Побудова дерева категорій: [http://localhost:8081/categories/array](http://localhost:8081/categories/array)
